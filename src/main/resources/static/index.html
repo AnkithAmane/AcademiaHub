@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up / Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; }
+        .container { max-width: 350px; margin: 60px auto; background: #fff; padding: 2em; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        h2 { text-align: center; }
+        label { display: block; margin-top: 1em; }
+        input { width: 100%; padding: 0.5em; margin-top: 0.5em; border: 1px solid #ccc; border-radius: 4px; }
+        button { margin-top: 1.5em; padding: 0.7em 1.5em; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; width: 100%; }
+        button:hover { background: #0056b3; }
+        .toggle { text-align: center; margin-top: 1em; color: #007bff; cursor: pointer; }
+        .toggle:hover { text-decoration: underline; }
+        .message { margin-top: 1em; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 id="formTitle">Sign Up</h2>
+        <form id="authForm">
+            <label for="email">Gmail</label>
+            <input type="email" id="email" name="email" required placeholder="Enter your Gmail">
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required placeholder="Enter your password">
+
+            <button type="submit" id="submitBtn">Sign Up</button>
+        </form>
+        <div class="toggle" id="toggleForm">Already have an account? Login</div>
+        <div class="message" id="message"></div>
+    </div>
+    <script>
+        const form = document.getElementById('authForm');
+        const toggle = document.getElementById('toggleForm');
+        const formTitle = document.getElementById('formTitle');
+        const submitBtn = document.getElementById('submitBtn');
+        let isLogin = false;
+
+        toggle.addEventListener('click', function() {
+            isLogin = !isLogin;
+            if (isLogin) {
+                formTitle.textContent = 'Login';
+                submitBtn.textContent = 'Login';
+                toggle.textContent = "Don't have an account? Sign Up";
+            } else {
+                formTitle.textContent = 'Sign Up';
+                submitBtn.textContent = 'Sign Up';
+                toggle.textContent = 'Already have an account? Login';
+            }
+            document.getElementById('message').textContent = '';
+            form.reset();
+        });
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const data = {
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                role: 'USER'
+            };
+            let url = isLogin ? '/api/auth/login' : '/api/auth/signup';
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.text();
+                if (response.ok) {
+                    if (isLogin) {
+                        // After login, always store at least the email in localStorage as 'user', merge backend info if available
+                        let userObj = { email: data.email };
+                        try {
+                            const userEmail = data.email;
+                            const userResp = await fetch(`/api/users/email/${encodeURIComponent(userEmail)}`);
+                            if (userResp.ok) {
+                                const userInfo = await userResp.json();
+                                userObj = { ...userObj, ...userInfo };
+                            }
+                        } catch (e) {
+                            // fallback to minimal user object
+                        }
+                        localStorage.setItem('user', JSON.stringify(userObj));
+                        window.location.href = '/api/users/home';
+                    } else {
+                        // After signup, redirect to user registration page
+                        document.getElementById('message').textContent = 'Sign Up successful! Redirecting...';
+                        setTimeout(function() {
+                            window.location.href = '/api/users/index';
+                        }, 1000);
+                    }
+                } else {
+                    document.getElementById('message').textContent = 'Error: ' + result;
+                }
+            } catch (err) {
+                document.getElementById('message').textContent = 'Network error: ' + err;
+            }
+            form.reset();
+        });
+    </script>
+</body>
+</html>

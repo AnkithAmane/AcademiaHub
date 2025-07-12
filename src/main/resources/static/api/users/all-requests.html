@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Course Requests</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; }
+        .container { max-width: 900px; margin: 40px auto; background: #fff; padding: 2em; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        h2 { text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 2em; }
+        th, td { padding: 0.8em 1em; border: 1px solid #ccc; text-align: left; }
+        th { background: #007bff; color: #fff; }
+        tr:nth-child(even) { background: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 style="text-align:center;">My Course Requests</h2>
+        <table id="requestsTable">
+            <thead>
+                <tr>
+                    <th>Course Name</th>
+                    <th>Duration</th>
+                    <th>Provider</th>
+                    <th>Description</th>
+                    <th>Justification</th>
+                    <th>Status</th>
+                    <th>Requested On</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Requests will be injected here -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        // Get user email and id from localStorage
+        let user = localStorage.getItem('user');
+        user = user ? JSON.parse(user) : {};
+        const userEmail = user.email || '';
+        const userId = user.id || '';
+
+        async function fetchRequests() {
+            let url = '';
+            if (userId && userEmail) {
+                url = `/api/course-requests/user/${encodeURIComponent(userId)}/${encodeURIComponent(userEmail)}`;
+            } else if (userEmail) {
+                url = `/api/course-requests/by-email/${encodeURIComponent(userEmail)}`;
+            } else {
+                renderRequests([]);
+                return;
+            }
+            const resp = await fetch(url);
+            if (resp.ok) {
+                const requests = await resp.json();
+                renderRequests(requests);
+            } else {
+                renderRequests([]);
+            }
+        }
+
+        function renderRequests(requests) {
+            const tbody = document.querySelector('#requestsTable tbody');
+            tbody.innerHTML = '';
+            if (!requests || requests.length === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="7" style="text-align:center;">No requests found.</td>`;
+                tbody.appendChild(tr);
+                return;
+            }
+            requests.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${r.courseName || ''}</td>
+                    <td>${r.courseDuration || ''}</td>
+                    <td>${r.courseProvider || ''}</td>
+                    <td>${r.courseDesc || ''}</td>
+                    <td>${r.justification || ''}</td>
+                    <td>${r.status || 'Pending'}</td>
+                    <td>${r.requestDate ? new Date(r.requestDate).toLocaleString() : ''}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        fetchRequests();
+    </script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Home - AcademiaHub</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; }
+        .navbar {
+            background: #007bff;
+            color: #fff;
+            padding: 1em 2em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar .links a {
+            color: #fff;
+            margin-left: 2em;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .navbar .links a:hover { text-decoration: underline; }
+        .welcome {
+            margin: 2em auto 1em auto;
+            max-width: 900px;
+            background: #fff;
+            padding: 1.5em 2em;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            font-size: 1.2em;
+        }
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 2em;
+            max-width: 1000px;
+            margin: 2em auto;
+        }
+        .course-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 1.5em 1.2em;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .course-title { font-size: 1.1em; font-weight: bold; margin-bottom: 0.5em; }
+        .course-desc { color: #555; margin-bottom: 0.7em; }
+        .course-meta { font-size: 0.95em; color: #666; margin-bottom: 1em; }
+        .request-btn {
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 0.6em 1.2em;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.2s;
+        }
+        .request-btn:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo"><b>AcademiaHub</b></div>
+        <div class="links">
+            <a href="/api/users/home.html">Home</a>
+            <a href="/api/users/all-requests.html">My Requests</a>
+            <a href="#" onclick="showProfileModal()">Profile</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </div>
+    </div>
+    <!-- Profile Modal -->
+    <div id="profileModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.4); z-index:1000;">
+        <div style="background:#fff; max-width:400px; margin:6em auto; padding:2em 2em 1em 2em; border-radius:10px; position:relative; box-shadow:0 2px 16px rgba(0,0,0,0.18);">
+            <h2 style="margin-top:0;">My Profile</h2>
+            <form id="profileForm">
+                <label>Name</label>
+                <input type="text" id="profileName" name="name" required disabled style="width:100%;margin-bottom:1em;">
+                <label>Email</label>
+                <input type="email" id="profileEmail" name="email" required disabled style="width:100%;margin-bottom:1em;">
+                <label>Role</label>
+                <input type="text" id="profileRole" name="role" required disabled style="width:100%;margin-bottom:1em;">
+                <label>Department</label>
+                <input type="text" id="profileDept" name="department" required disabled style="width:100%;margin-bottom:1em;">
+                <div style="margin-top:1.5em; text-align:right;">
+                    <button type="button" id="editProfileBtn">Edit</button>
+                    <button type="submit" id="saveProfileBtn" style="display:none;">Save</button>
+                    <button type="button" onclick="closeProfileModal()">Close</button>
+                </div>
+            </form>
+            <div id="profileMsg" style="color:green; margin-top:1em;"></div>
+        </div>
+    </div>
+    <div class="welcome" id="welcomeMsg">Welcome!</div>
+    <div class="course-grid" id="courseGrid">
+        <!-- Course cards will be injected here -->
+    </div>
+    <script>
+        // Simulate fetching user info (replace with real API call/session logic)
+        function getUserInfo() {
+            return {
+                name: localStorage.getItem('userName') || 'User',
+                email: localStorage.getItem('userEmail') || '',
+                role: localStorage.getItem('userRole') || 'USER',
+                department: localStorage.getItem('userDepartment') || ''
+            };
+        }
+
+        // Simulate fetching courses (replace with real API call)
+        function getCourses() {
+            return [
+                { title: 'Python for Beginners', description: 'Learn Python from scratch.', duration: '4 weeks', provider: 'Coursera' },
+                { title: 'Data Structures', description: 'Master core data structures.', duration: '6 weeks', provider: 'edX' },
+                { title: 'Web Development', description: 'Build modern web apps.', duration: '8 weeks', provider: 'Udemy' },
+                { title: 'Machine Learning', description: 'Intro to ML concepts.', duration: '10 weeks', provider: 'Coursera' },
+                { title: 'Cloud Computing', description: 'AWS, Azure, and GCP basics.', duration: '5 weeks', provider: 'Pluralsight' },
+                { title: 'Cybersecurity Basics', description: 'Protect digital assets.', duration: '3 weeks', provider: 'edX' }
+            ];
+        }
+
+        // Render welcome message
+        const user = getUserInfo();
+        document.getElementById('welcomeMsg').textContent = `Welcome, ${user.name}! (Role: ${user.role})`;
+
+        // Render course cards
+        function renderCourses() {
+            const courses = getCourses();
+            const courseGrid = document.getElementById('courseGrid');
+            courseGrid.innerHTML = '';
+            courses.forEach(course => {
+                const card = document.createElement('div');
+                card.className = 'course-card';
+                card.innerHTML = `
+                    <div class="course-title">${course.title}</div>
+                    <div class="course-desc">${course.description}</div>
+                    <div class="course-meta">Duration: ${course.duration} | Provider: ${course.provider}</div>
+                    <button class="request-btn" onclick="requestAccess('${course.title}', '${course.duration}', '${course.provider}', '${course.description}')">Request Access</button>
+                `;
+                courseGrid.appendChild(card);
+            });
+        }
+
+        function requestAccess(title, duration, provider, description) {
+            const params = new URLSearchParams();
+            params.append('title', encodeURIComponent(title));
+            params.append('duration', encodeURIComponent(duration));
+            params.append('provider', encodeURIComponent(provider));
+            params.append('description', encodeURIComponent(description));
+            window.location.href = `/api/users/request-access?${params.toString()}`;
+        }
+
+        // Render courses on page load
+        renderCourses();
+
+        // Profile Modal logic
+        function showProfileModal() {
+            const user = getUserInfo();
+            document.getElementById('profileName').value = user.name;
+            document.getElementById('profileEmail').value = user.email;
+            document.getElementById('profileRole').value = user.role;
+            document.getElementById('profileDept').value = user.department;
+            document.getElementById('profileName').disabled = true;
+            document.getElementById('profileEmail').disabled = true;
+            document.getElementById('profileRole').disabled = true;
+            document.getElementById('profileDept').disabled = true;
+            document.getElementById('editProfileBtn').style.display = '';
+            document.getElementById('saveProfileBtn').style.display = 'none';
+            document.getElementById('profileMsg').textContent = '';
+            document.getElementById('profileModal').style.display = 'block';
+        }
+        function closeProfileModal() {
+            document.getElementById('profileModal').style.display = 'none';
+        }
+        document.getElementById('editProfileBtn').onclick = function() {
+            document.getElementById('profileName').disabled = false;
+            document.getElementById('profileEmail').disabled = false;
+            document.getElementById('profileRole').disabled = false;
+            document.getElementById('profileDept').disabled = false;
+            document.getElementById('editProfileBtn').style.display = 'none';
+            document.getElementById('saveProfileBtn').style.display = '';
+        };
+        document.getElementById('profileForm').onsubmit = function(e) {
+            e.preventDefault();
+            // Save changes to localStorage (replace with API call for real app)
+            localStorage.setItem('userName', document.getElementById('profileName').value);
+            localStorage.setItem('userEmail', document.getElementById('profileEmail').value);
+            localStorage.setItem('userRole', document.getElementById('profileRole').value);
+            localStorage.setItem('userDepartment', document.getElementById('profileDept').value);
+            document.getElementById('profileName').disabled = true;
+            document.getElementById('profileEmail').disabled = true;
+            document.getElementById('profileRole').disabled = true;
+            document.getElementById('profileDept').disabled = true;
+            document.getElementById('editProfileBtn').style.display = '';
+            document.getElementById('saveProfileBtn').style.display = 'none';
+            document.getElementById('profileMsg').textContent = 'Profile updated!';
+            // Optionally update welcome message
+            document.getElementById('welcomeMsg').textContent = `Welcome, ${document.getElementById('profileName').value}! (Role: ${document.getElementById('profileRole').value})`;
+        };
+        function logout() {
+            // Clear session/localStorage and redirect to login
+            localStorage.clear();
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

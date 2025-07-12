@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Registration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 2em;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-top: 1em;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 0.5em;
+            margin-top: 0.5em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            margin-top: 1.5em;
+            padding: 0.7em 1.5em;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .message {
+            margin-top: 1em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>User Registration</h2>
+        <form id="userForm">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="role">Role</label>
+            <input type="text" id="role" name="role" required>
+
+            <label for="department">Department</label>
+            <input type="text" id="department" name="department" required>
+
+            <button type="submit">Register</button>
+        </form>
+        <div class="message" id="message"></div>
+    </div>
+    <script>
+        document.getElementById('userForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Validate form fields
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const role = document.getElementById('role').value.trim();
+            const department = document.getElementById('department').value.trim();
+
+
+            if (!name || !email || !role || !department) {
+                document.getElementById('message').textContent = 'All fields are required.';
+                return;
+            }
+
+            // Proceed with form submission
+            const data = { name, email, role, department };
+            fetch('/api/users/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(response => {
+                    if (response.redirected) {
+                        // Handle the redirect from the server
+                        window.location.href = response.url;
+                    } else if (response.ok) {
+                        document.getElementById('message').textContent = 'User registered successfully!';
+                        document.getElementById('userForm').reset();
+                    } else {
+                        return response.text().then(error => {
+                            document.getElementById('message').textContent = 'Error: ' + error;
+                        });
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('message').textContent = 'Network error: ' + err;
+                });
+        });
+    </script>
+</body>
+
+</html>
