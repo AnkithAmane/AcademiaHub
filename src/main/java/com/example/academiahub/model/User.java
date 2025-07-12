@@ -2,6 +2,7 @@ package com.example.academiahub.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.CascadeType;
@@ -10,35 +11,37 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 @Entity
 @Table(name = "users") // Updated table name to match database schema
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
 
     @Column(nullable = false, unique = true)
     private String email;
-    private String role;
-    private String department;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<CourseRequest> courseRequests;
 
     @Column(nullable = false)
     private String password;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    private List<CourseRequest> courseRequests;
+    @Column(nullable = false)
+    private String role; // USER or ADMIN
 
-    @OneToOne
-    @JoinColumn(name = "user_auth_id", referencedColumnName = "id")
-    private UserAuth userAuth;
+    private String department;
+
+    @Column(name = "created_at", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    private java.time.LocalDateTime createdAt;
 
     public User() {
     }
@@ -51,6 +54,7 @@ public class User {
         this.password = "default123"; // Setting a default password
     }
 
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -105,13 +109,5 @@ public class User {
 
     public void setCourseRequests(List<CourseRequest> courseRequests) {
         this.courseRequests = courseRequests;
-    }
-
-    public UserAuth getUserAuth() {
-        return userAuth;
-    }
-
-    public void setUserAuth(UserAuth userAuth) {
-        this.userAuth = userAuth;
     }
 }
